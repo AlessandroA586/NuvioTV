@@ -32,61 +32,18 @@ jobs:
 
       - name: Generate Release Keystore and Local Properties
         run: |
-          keystore_path="${RUNNER_TEMP}/juansher.jks"
-          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > "${keystore_path}"
-          
-          cat <<EOF > local.properties
-          NUVIO_RELEASE_STORE_FILE=${keystore_path}
-          NUVIO_RELEASE_STORE_PASSWORD=${{ secrets.RELEASE_STORE_PASSWORD }}
-          NUVIO_RELEASE_KEY_ALIAS=${{ secrets.RELEASE_KEY_ALIAS }}
-          NUVIO_RELEASE_KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}
-          NUVIO_SUPABASE_URL=https://api.nuvio.tv
-          NUVIO_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgxNTIxMzQ2LCJleHAiOjE5MzkyMDEzNDZ9.tmQaj682pwzehpqlgCDMnySOqiUvpgRbrE43T4VJpDI
-          NUVIO_SUPABASE_FALLBACK_URL=https://api-two.nuvioapp.space
-          SENTRY_DSN=https://a4f60d0d86876166059c050511332924@o4511671534354432.ingest.us.sentry.io/4511676526166016
-          TMDB_API_KEY=01926d2187b6a5d861eefc750e9df3e3
-          TRAKT_CLIENT_ID=5783db7c46a5b22f072d4b224f9bd7dc2cbaba66dbe3515d1feb59e3ca72394c
-          TRAKT_CLIENT_SECRET=bf6e7561dafee902f5a2a67d2b31feac1563632f331f3958c978aff6389ea384
-          TRAKT_REDIRECT_URI=nuvio://auth/trakt
-          SIMKL_CLIENT_ID=dc20e0db975583b15096267cee79cd23b1f56d4bd301ce3c51e4a96a49c834a6
-          SIMKL_APP_NAME=nuvio
-          MDBLIST_CLIENT_ID=kMMZyv8qithmUSF5102U6HTAPEDqfHtNbn1W4gkz
-          INTRODB_API_URL=https://api.introdb.app/
-          IMDB_RATINGS_API_BASE_URL=https://imdb.tapframe.space/
-          IMDB_TAPFRAME_API_BASE_URL=https://imdb.tapframe.space/
-          SUPPORTERS_API_BASE_URL=https://nuvio.tv/
-          SUPPORT_URL=https://nuvio.tv/support
-          TV_LOGIN_WEB_BASE_URL=https://nuvio.tv/tv-login
-          DEVICE_LOGIN_WEB_BASE_URL=https://nuvio.tv/link
-          EOF
-
-      - name: Build Android TV Full Release APK
-        run: ./gradlew :app:assembleFullRelease --stacktrace
-
-      - name: Locate and Collect APKs
-        run: |
-          mkdir -p dist
-          find app/build/outputs/apk/full/release -name "*.apk" -exec cp {} dist/ \;
-          ls -la dist/
-
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
           gh release delete v1.1.0 --yes --repo "${{ github.repository }}" || true
           git tag -d v1.1.0 || true
           git push origin :refs/tags/v1.1.0 || true
-
-          cat << 'EOF' > release_notes.md
-Versión personalizada de Nuvio Android TV v1.1.0 para Smart TV y TV Box.
+          gh release create v1.1.0 dist/*.apk \
+            --title "Nuvio TV Custom v1.1.0 (Juansher)" \
+            --notes "Versión personalizada de Nuvio Android TV v1.1.0 para Smart TV y TV Box.
 
 ### Novedades y correcciones en v1.1.0:
-- **Indicador de enlace activo:** El panel lateral de fuentes ahora identifica y resalta siempre con la etiqueta "Reproduciendo" y borde iluminado el enlace en uso, incluyendo streams de Real-Debrid y AIOStreams.
-- **Auto-scroll a la fuente en reproducción:** Al abrir el panel de fuentes, la lista se desplaza automáticamente hasta la fuente activa para que aparezca en pantalla.
-- **Corrección en películas:** Se corrigió la consulta de fuentes en películas para utilizar siempre el identificador IMDb, garantizando la lista completa de resultados de torrents/debrid.
-- **Filtro Regex de idioma:** Cancela la reproducción automática si no hay audio en español y muestra la lista de streams disponibles.
-- **Autenticación oficial:** Supabase, TMDB, Trakt, Simkl, MDBList configurados con los servidores oficiales de Nuvio.
-- **Identificador de versión:** Juansher | V1.1.0.
-EOF
-
-          gh release create v1.1.0 dist/*.apk --repo "${{ github.repository }}" --target "${{ github.ref_name }}" --title "Nuvio TV Custom v1.1.0 (Juansher)" --notes-file release_notes.md
+- Indicador de enlace activo: El panel lateral de fuentes ahora identifica y resalta siempre con la etiqueta 'Reproduciendo' y borde iluminado el enlace en uso, incluyendo streams de Real-Debrid y AIOStreams.
+- Auto-scroll a la fuente en reproducción: Al abrir el panel de fuentes, la lista se desplaza automáticamente hasta la fuente activa para que aparezca en pantalla.
+- Corrección en películas: Se corrigió la consulta de fuentes en películas para utilizar siempre el identificador IMDb, garantizando la lista completa de resultados de torrents/debrid.
+- Filtro Regex de idioma: Cancela la reproducción automática si no hay audio en español y muestra la lista de streams disponibles.
+- Autenticación oficial: Supabase, TMDB, Trakt, Simkl, MDBList con servidores oficiales.
+- Identificador de versión: Juansher | V1.1.0." \
+            --repo "${{ github.repository }}"
