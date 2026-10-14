@@ -342,8 +342,17 @@ internal fun StreamSourcesSidePanel(
                         currentStreamFileIdx = uiState.currentStreamFileIdx,
                         currentStreamAddonName = uiState.currentStreamAddonName,
                         currentStreamUrl = uiState.currentStreamUrl,
-                        currentStreamName = uiState.currentStreamName
+                        currentStreamName = uiState.currentStreamName,
+                        currentStreamDescription = uiState.currentStreamDescription,
+                        currentStreamFilename = uiState.currentStreamFilename
                     )
+
+                    // Auto-scroll to current stream when panel is loaded
+                    LaunchedEffect(currentStreamIndex, uiState.isLoadingSourceStreams) {
+                        if (!uiState.isLoadingSourceStreams && currentStreamIndex >= 0 && !userMovedFromFirstResult) {
+                            streamListState.scrollToItem(currentStreamIndex)
+                        }
+                    }
 
                     val lastKeyRepeatDispatchRef = remember { java.util.concurrent.atomic.AtomicLong(0L) }
 
@@ -467,11 +476,13 @@ private fun findCurrentStreamIndex(
     currentStreamFileIdx: Int?,
     currentStreamAddonName: String?,
     currentStreamUrl: String?,
-    currentStreamName: String?
+    currentStreamName: String?,
+    currentStreamDescription: String? = null,
+    currentStreamFilename: String? = null
 ): Int {
     if (streams.isEmpty()) return -1
 
-    // Strategy 1: match by infoHash + fileIdx + addonName (most precise for debrid streams)
+    // Strategy 1: match by infoHash + fileIdx + addonName (most precise for debrid / torrent streams)
     if (!currentStreamInfoHash.isNullOrBlank()) {
         val hashMatch = streams.indexOfFirst { stream ->
             val streamInfoHash = stream.infoHash ?: stream.clientResolve?.infoHash
@@ -483,7 +494,7 @@ private fun findCurrentStreamIndex(
         if (hashMatch >= 0) return hashMatch
     }
 
-    // Strategy 2: match by addon + URL (works for non-debrid HTTP streams)
+    // Strategy 2: match by addon + URL (works for non-debrid direct HTTP streams)
     if (!currentStreamUrl.isNullOrBlank() && !currentStreamAddonName.isNullOrBlank()) {
         val urlMatch = streams.indexOfFirst { stream ->
             stream.addonName == currentStreamAddonName &&
@@ -492,12 +503,54 @@ private fun findCurrentStreamIndex(
         if (urlMatch >= 0) return urlMatch
     }
 
-    // Fallback: match by URL only (without addon filter)
+    // Strategy 3: match by URL only (without addon filter)
     if (!currentStreamUrl.isNullOrBlank()) {
         val urlMatch = streams.indexOfFirst { stream ->
             stream.getStreamUrl() == currentStreamUrl
         }
         if (urlMatch >= 0) return urlMatch
+    }
+
+    // Strategy 4: match by normalized release description / title / filename (crucial for Debrid CDN streams)
+    // Debrid and AIOStreams resolve streams into temporary direct CDN links where URL and infoHash differ,
+    // but the release name in description, title, or filename is unique and preserved.
+    fun normalize(s: String?): String =
+        s.orEmpty().lowercase().replace(Regex("[^a-z0-9]"), "")
+
+    val targetFilenameNorm = normalize(currentStreamFilename).takeIf { it.length >= 5 }
+    val targetDescNorm = normalize(currentStreamDescription).takeIf { it.length >= 5 }
+
+    if (targetFilenameNorm != null || targetDescNorm != null) {
+        val contentMatch = streams.indexOfFirst { stream ->
+            val sameAddon = currentStreamAddonName == null || stream.addonName == currentStreamAddonName
+            if (!sameAddon) return@indexOfFirst false
+
+            val streamFilenameNorm = normalize(stream.behaviorHints?.filename)
+            val streamTitleNorm = normalize(stream.title)
+            val streamDescNorm = normalize(stream.description)
+
+            (targetFilenameNorm != null && (
+                streamFilenameNorm == targetFilenameNorm ||
+                streamTitleNorm.contains(targetFilenameNorm) ||
+                streamDescNorm.contains(targetFilenameNorm)
+            )) || (targetDescNorm != null && (
+                streamDescNorm == targetDescNorm ||
+                streamTitleNorm == targetDescNorm ||
+                (targetDescNorm.length > 15 && (streamDescNorm.contains(targetDescNorm) || targetDescNorm.contains(streamDescNorm)))
+            ))
+        }
+        if (contentMatch >= 0) return contentMatch
+    }
+
+    // Strategy 5: match by streamName with matching provider
+    if (!currentStreamName.isNullOrBlank()) {
+        val nameMatch = streams.indexOfFirst { stream ->
+            val sameAddon = currentStreamAddonName == null || stream.addonName == currentStreamAddonName
+            val nameEqual = stream.name.equals(currentStreamName, ignoreCase = true) ||
+                stream.name?.contains(currentStreamName, ignoreCase = true) == true
+            sameAddon && nameEqual
+        }
+        if (nameMatch >= 0) return nameMatch
     }
 
     return -1
