@@ -148,7 +148,6 @@ object StreamAutoPlaySelector {
                         append(stream.name.orEmpty()).append(' ')
                         append(stream.title.orEmpty()).append(' ')
                         append(stream.description.orEmpty()).append(' ')
-                        append(stream.getStreamUrl().orEmpty())
                         if (stream.isTorrent()) append(' ').append(stream.infoHash.orEmpty())
                     }
 
