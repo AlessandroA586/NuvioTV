@@ -89,8 +89,4 @@ Versión personalizada de Nuvio Android TV v1.1.0 para Smart TV y TV Box.
 - **Identificador de versión:** Juansher | V1.1.0.
 EOF
 
-          gh release create v1.1.0 dist/*.apk \
-            --repo "${{ github.repository }}" \
-            --target "${{ github.ref_name }}" \
-            --title "Nuvio TV Custom v1.1.0 (Juansher)" \
-            --notes-file release_notes.md
+          gh release create v1.1.0 dist/*.apk --repo "${{ github.repository }}" --target "${{ github.ref_name }}" --title "Nuvio TV Custom v1.1.0 (Juansher)" --notes-file release_notes.md
