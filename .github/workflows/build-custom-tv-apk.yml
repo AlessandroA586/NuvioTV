@@ -73,13 +73,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete v1.0.0 --yes --repo "${{ github.repository }}" || true
-          git tag -d v1.0.0 || true
-          git push origin :refs/tags/v1.0.0 || true
-          gh release create v1.0.0 dist/*.apk \
-            --title "Nuvio TV Custom v1.0.0 (Juansher)" \
-            --notes "Versión personalizada de Nuvio Android TV v1.0.0.
-          - Corrección de filtro de idioma en auto-play (eliminado dominio web del texto de búsqueda).
-          - Identificador de versión: Juansher | V1.0.0.
-          - Actualizaciones automáticas vinculadas a AlessandroA586/NuvioTV." \
-            --repo "${{ github.repository }}"
+          gh release delete v1.1.0 --yes --repo "${{ github.repository }}" || true
+          git tag -d v1.1.0 || true
+          git push origin :refs/tags/v1.1.0 || true
+
+          cat << 'EOF' > release_notes.md
+Versión personalizada de Nuvio Android TV v1.1.0 para Smart TV y TV Box.
+
+### Novedades y correcciones en v1.1.0:
+- **Indicador de enlace activo:** El panel lateral de fuentes ahora identifica y resalta siempre con la etiqueta "Reproduciendo" y borde iluminado el enlace en uso, incluyendo streams de Real-Debrid y AIOStreams.
+- **Auto-scroll a la fuente en reproducción:** Al abrir el panel de fuentes, la lista se desplaza automáticamente hasta la fuente activa para que aparezca en pantalla.
+- **Corrección en películas:** Se corrigió la consulta de fuentes en películas para utilizar siempre el identificador IMDb, garantizando la lista completa de resultados de torrents/debrid.
+- **Filtro Regex de idioma:** Cancela la reproducción automática si no hay audio en español y muestra la lista de streams disponibles.
+- **Autenticación oficial:** Supabase, TMDB, Trakt, Simkl, MDBList configurados con los servidores oficiales de Nuvio.
+- **Identificador de versión:** Juansher | V1.1.0.
+EOF
+
+          gh release create v1.1.0 dist/*.apk \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.ref_name }}" \
+            --title "Nuvio TV Custom v1.1.0 (Juansher)" \
+            --notes-file release_notes.md
