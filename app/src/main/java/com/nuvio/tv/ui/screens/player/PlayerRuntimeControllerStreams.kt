@@ -173,7 +173,7 @@ private fun PlayerRuntimeController.currentSourceStreamsRequest(): SourceStreams
     } else {
         SourceStreamsRequest(
             type = contentType ?: "movie",
-            videoId = contentId ?: return null,
+            videoId = currentVideoId ?: contentId ?: return null,
             season = null,
             episode = null
         )
@@ -979,6 +979,8 @@ internal fun PlayerRuntimeController.switchToSourceStream(
             isBuffering = true,
             error = null,
             currentStreamName = stream.name ?: stream.addonName,
+            currentStreamDescription = stream.description,
+            currentStreamFilename = stream.behaviorHints?.filename,
             currentStreamUrl = playbackUrl,
             currentStreamInfoHash = stream.infoHash ?: stream.clientResolve?.infoHash,
             currentStreamFileIdx = stream.clientResolve?.fileIdx,
@@ -1091,6 +1093,8 @@ private fun PlayerRuntimeController.switchToTorrentSourceStream(
             isBuffering = true,
             error = null,
             currentStreamName = stream.name ?: stream.addonName,
+            currentStreamDescription = stream.description,
+            currentStreamFilename = stream.behaviorHints?.filename,
             currentStreamUrl = "",
             currentStreamInfoHash = stream.infoHash ?: stream.clientResolve?.infoHash,
             currentStreamFileIdx = stream.clientResolve?.fileIdx,
@@ -1581,6 +1585,8 @@ internal fun PlayerRuntimeController.switchToEpisodeStream(
             currentVideoId = currentVideoId,
             currentEpisodeTitle = currentEpisodeTitle,
             currentStreamName = stream.name ?: stream.addonName,
+            currentStreamDescription = stream.description,
+            currentStreamFilename = stream.behaviorHints?.filename,
             currentStreamUrl = playbackUrl,
             currentStreamInfoHash = stream.infoHash ?: stream.clientResolve?.infoHash,
             currentStreamFileIdx = stream.clientResolve?.fileIdx,
