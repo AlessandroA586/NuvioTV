@@ -132,10 +132,16 @@ class AndroidTvChannelSyncService @Inject constructor(
             "Reconciling from cache: ${channelItems.size} items " +
                 "(${inProgressItems.size} in-progress, ${nextUpItems.size} next-up raw)"
         )
-        manager.reconcile(channelItems)
+        runCatching {
+            manager.reconcile(channelItems)
+        }.onFailure {
+            Log.w(TAG, "Android TV launcher channel reconciliation failed (non-fatal)", it)
+        }
 
         runCatching {
             tvRecommendationManager.updateWatchNext(channelItems)
+        }.onFailure {
+            Log.w(TAG, "Android TV watch next recommendation update failed (non-fatal)", it)
         }
     }
 
