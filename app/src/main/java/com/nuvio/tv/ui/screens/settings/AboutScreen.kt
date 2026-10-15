@@ -132,7 +132,14 @@ fun AboutSettingsContent(
                             )
 
                             Text(
-                                text = "Juansher | V${BuildConfig.VERSION_NAME}",
+                                text = stringResource(R.string.about_version, "1.1.0-beta.6 (1069)"),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = NuvioTheme.colors.TextSecondary,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Text(
+                                text = "Juansher | V1.2.0",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = NuvioTheme.colors.TextSecondary,
                                 textAlign = TextAlign.Center
