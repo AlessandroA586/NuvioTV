@@ -30,6 +30,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -130,8 +131,8 @@ internal fun StreamItem(
         border = CardDefaults.border(
             border = Border(
                 border = BorderStroke(
-                    NuvioTheme.spacing.hairline,
-                    if (isCurrentStream) NuvioTheme.colors.Primary.copy(alpha = 0.65f) else Color.Transparent
+                    if (isCurrentStream) 1.5.dp else NuvioTheme.spacing.hairline,
+                    if (isCurrentStream) NuvioTheme.colors.Primary else Color.Transparent
                 ),
                 shape = RoundedCornerShape(NuvioTheme.radii.md)
             ),
@@ -140,7 +141,7 @@ internal fun StreamItem(
                 shape = RoundedCornerShape(NuvioTheme.radii.md)
             )
         ),
-        scale = CardDefaults.scale(focusedScale = 1.04f)
+        scale = CardDefaults.scale(focusedScale = 1f)
     ) {
         Row(
             modifier = Modifier
@@ -180,13 +181,15 @@ internal fun StreamItem(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(999.dp))
-                                    .background(NuvioTheme.colors.Primary.copy(alpha = 0.2f))
-                                    .padding(horizontal = NuvioTheme.spacing.sm, vertical = NuvioTheme.spacing.xs)
+                                    .background(NuvioTheme.colors.Primary)
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
                             ) {
                                 Text(
                                     text = stringResource(R.string.sources_playing),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = NuvioTheme.colors.Primary
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    color = Color.White
                                 )
                             }
                         }
