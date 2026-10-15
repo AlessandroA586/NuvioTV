@@ -1462,7 +1462,7 @@ class StreamScreenViewModel @Inject constructor(
         val playbackInfo = StreamPlaybackInfo(
             url = stream.getStreamUrl(),
             title = _uiState.value.title,
-            streamName = stream.name ?: stream.addonName,
+            streamName = stream.name ?: stream.getDisplayNameOrNull() ?: stream.addonName,
             year = year,
             isExternal = stream.isExternal(),
             isTorrent = stream.isTorrent(),
@@ -1486,7 +1486,7 @@ class StreamScreenViewModel @Inject constructor(
             videoSize = stream.behaviorHints?.videoSize,
             addonName = stream.addonName,
             addonLogo = stream.addonLogo,
-            streamDescription = stream.description,
+            streamDescription = stream.getDisplayDescription() ?: stream.title ?: stream.description,
             fileIdx = stream.getEffectiveFileIdx(),
             sources = stream.sources,
             contentLanguage = contentLanguage
