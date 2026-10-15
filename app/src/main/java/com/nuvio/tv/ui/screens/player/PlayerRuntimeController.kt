@@ -308,6 +308,7 @@ class PlayerRuntimeController(
             currentStreamDescription = navigationArgs.streamDescription,
             currentStreamFilename = navigationArgs.filename,
             currentStreamUrl = currentStreamUrl,
+            initialStreamUrl = initialStreamUrl,
             currentStreamInfoHash = navigationArgs.infoHash,
             currentStreamFileIdx = navigationArgs.fileIdx,
             currentStreamAddonName = navigationArgs.addonName,
