@@ -504,59 +504,46 @@ private fun findCurrentStreamIndex(
         if (urlMatch >= 0) return urlMatch
     }
 
-    // Strategy 3: match by normalized release description / title / filename (crucial for Debrid CDN streams)
     fun normalize(s: String?): String =
         s.orEmpty().lowercase().replace(Regex("[^a-z0-9]"), "")
 
     val targetFilenameNorm = normalize(currentStreamFilename).takeIf { it.length >= 5 }
     val targetDescNorm = normalize(currentStreamDescription).takeIf { it.length >= 5 }
+    val targetNameNorm = normalize(currentStreamName).takeIf { it.length >= 3 }
 
-    if (targetFilenameNorm != null || targetDescNorm != null) {
-        val contentMatch = streams.indexOfFirst { stream ->
+    // Strategy 3: match by filename
+    if (targetFilenameNorm != null) {
+        val fileMatch = streams.indexOfFirst { stream ->
             val streamFilenameNorm = normalize(stream.behaviorHints?.filename)
-            val streamTitleNorm = normalize(stream.title)
-            val streamDescNorm = normalize(stream.description)
-            val streamDisplayDescNorm = normalize(stream.getDisplayDescription())
-
-            val sameAddon = currentStreamAddonName == null ||
-                stream.addonName.equals(currentStreamAddonName, ignoreCase = true)
-
-            val descMatch = targetDescNorm != null && (
-                streamDescNorm == targetDescNorm ||
-                streamTitleNorm == targetDescNorm ||
-                streamDisplayDescNorm == targetDescNorm ||
-                (targetDescNorm.length > 10 && (
-                    streamDescNorm.contains(targetDescNorm) || targetDescNorm.contains(streamDescNorm) ||
-                    streamTitleNorm.contains(targetDescNorm) || targetDescNorm.contains(streamTitleNorm) ||
-                    streamDisplayDescNorm.contains(targetDescNorm) || targetDescNorm.contains(streamDisplayDescNorm)
-                ))
-            )
-
-            val fileMatch = targetFilenameNorm != null && (
-                streamFilenameNorm == targetFilenameNorm ||
-                streamTitleNorm.contains(targetFilenameNorm) ||
-                streamDescNorm.contains(targetFilenameNorm) ||
-                streamDisplayDescNorm.contains(targetFilenameNorm)
-            )
-
-            // High confidence release match (>12 chars) does not require addon equality
-            (descMatch || fileMatch) && (sameAddon || (targetDescNorm != null && targetDescNorm.length > 12))
+            streamFilenameNorm == targetFilenameNorm
         }
-        if (contentMatch >= 0) return contentMatch
+        if (fileMatch >= 0) return fileMatch
     }
 
-    // Strategy 4: match by streamName / displayName
-    if (!currentStreamName.isNullOrBlank()) {
-        val targetNameNorm = normalize(currentStreamName).takeIf { it.length >= 3 }
-        if (targetNameNorm != null) {
-            val nameMatch = streams.indexOfFirst { stream ->
-                val streamNameNorm = normalize(stream.name ?: stream.getDisplayNameOrNull())
-                val sameAddon = currentStreamAddonName == null ||
-                    stream.addonName.equals(currentStreamAddonName, ignoreCase = true)
-                sameAddon && (streamNameNorm == targetNameNorm || (streamNameNorm.isNotEmpty() && (streamNameNorm.contains(targetNameNorm) || targetNameNorm.contains(streamNameNorm))))
-            }
-            if (nameMatch >= 0) return nameMatch
+    // Strategy 4: match by exact streamName / displayName + addonName
+    if (targetNameNorm != null) {
+        val nameMatch = streams.indexOfFirst { stream ->
+            val streamNameNorm = normalize(stream.name ?: stream.getDisplayNameOrNull())
+            val sameAddon = currentStreamAddonName == null ||
+                stream.addonName.equals(currentStreamAddonName, ignoreCase = true)
+            val streamDescNorm = normalize(stream.getDisplayDescription())
+            val descMatches = targetDescNorm == null || streamDescNorm.isEmpty() || streamDescNorm == targetDescNorm
+            sameAddon && streamNameNorm == targetNameNorm && descMatches
         }
+        if (nameMatch >= 0) return nameMatch
+    }
+
+    // Strategy 5: match by exact normalized release description
+    if (targetDescNorm != null) {
+        val contentMatch = streams.indexOfFirst { stream ->
+            val streamDescNorm = normalize(stream.description)
+            val streamDisplayDescNorm = normalize(stream.getDisplayDescription())
+            val sameAddon = currentStreamAddonName == null ||
+                stream.addonName.equals(currentStreamAddonName, ignoreCase = true)
+            (streamDescNorm == targetDescNorm || streamDisplayDescNorm == targetDescNorm) &&
+                (sameAddon || targetDescNorm.length >= 20)
+        }
+        if (contentMatch >= 0) return contentMatch
     }
 
     return -1
