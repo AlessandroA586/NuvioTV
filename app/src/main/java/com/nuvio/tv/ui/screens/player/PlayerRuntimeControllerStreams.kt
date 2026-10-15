@@ -211,6 +211,44 @@ internal fun PlayerRuntimeController.loadSourceStreams(forceRefresh: Boolean) {
         sourceStreamsCacheRequestKey = requestKey
         sourceStreamsFetchCompleted = false
         if (forceRefresh || targetChanged) sourceBadgedAddonNames = emptySet()
+
+        val installedAddons = streamAddonsFor(vid)
+        val installedAddonOrder = installedAddons.map { it.displayName }
+        val installedAddonNames = installedAddonOrder.toSet()
+        val preferredServerNames = serverStreams.preferredSourceNames(type, vid)
+        var debridPreparationLaunched = false
+
+        // Instant reuse: if not force-refreshing, check if initial search streams are already cached in repository
+        if (!forceRefresh && (targetChanged || state.sourceAllStreams.isEmpty())) {
+            val cachedAddons = streamRepository.getCachedStreamsFromAllAddons(type, vid, seasonArg, episodeArg)
+            if (!cachedAddons.isNullOrEmpty()) {
+                val addonStreams = StreamAutoPlaySelector.orderAddonStreams(cachedAddons, installedAddonOrder, preferredServerNames)
+                val allStreams = addonStreams.flatMap { it.streams }
+                val availableAddons = addonStreams.map { it.addonName }
+                val selectedAddon = _uiState.value.sourceSelectedAddonFilter
+                val filteredStreams = if (selectedAddon == null) allStreams else allStreams.filter { it.addonName == selectedAddon }
+                sourceFilterFullList = filteredStreams
+                val paginatedStreams = if (filteredStreams.size > SOURCE_FILTER_PAGE_SIZE) {
+                    filteredStreams.subList(0, SOURCE_FILTER_PAGE_SIZE)
+                } else {
+                    filteredStreams
+                }
+                _uiState.update {
+                    it.copy(
+                        isLoadingSourceStreams = false,
+                        sourceStreamsError = null,
+                        sourceAllStreams = allStreams,
+                        sourceAvailableAddons = availableAddons,
+                        sourceFilteredStreams = paginatedStreams,
+                        sourceChips = emptyList()
+                    )
+                }
+                sourceStreamsFetchCompleted = true
+                launchBadgePresentationForVisibleStreams(paginatedStreams)
+                return@launch
+            }
+        }
+
         _uiState.update {
             it.copy(
                 isLoadingSourceStreams = true,
@@ -223,13 +261,6 @@ internal fun PlayerRuntimeController.loadSourceStreams(forceRefresh: Boolean) {
             )
         }
 
-        val installedAddons = streamAddonsFor(vid)
-        val installedAddonOrder = installedAddons.map { it.displayName }
-        val installedAddonNames = installedAddonOrder.toSet()
-        val preferredServerNames = serverStreams.preferredSourceNames(type, vid)
-        var debridPreparationLaunched = false
-
-        // On resume, skip chip reset — keep existing chip statuses
         if (!isResume) {
             updateSourceChipsForFetchStart(type, vid, installedAddons)
         }
