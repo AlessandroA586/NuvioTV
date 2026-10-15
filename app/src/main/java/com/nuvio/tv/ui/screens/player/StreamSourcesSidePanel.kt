@@ -516,7 +516,7 @@ private fun findCurrentStreamIndex(
     val initialCanonical = canonical(initialStreamUrl)
     val currentCanonical = canonical(currentStreamUrl)
 
-    // Strategy 1: match by initialStreamUrl (exact URL before any HTTP redirects)
+    // Strategy 1: match by initialStreamUrl (exact URL before HTTP redirects)
     if (!initialStreamUrl.isNullOrBlank()) {
         val initMatch = streams.indexOfFirst { stream ->
             val direct = stream.getStreamUrl()
@@ -538,7 +538,7 @@ private fun findCurrentStreamIndex(
         if (urlMatch >= 0) return urlMatch
     }
 
-    // Strategy 3: match by infoHash + fileIdx + addonName
+    // Strategy 3: match by infoHash + fileIdx
     val effectiveTargetHash = currentStreamInfoHash?.trim()?.lowercase()
     if (!effectiveTargetHash.isNullOrBlank()) {
         val hashMatch = streams.indexOfFirst { stream ->
@@ -546,8 +546,7 @@ private fun findCurrentStreamIndex(
             val streamFileIdx = stream.fileIdx ?: stream.clientResolve?.fileIdx
             val sameHash = streamInfoHash == effectiveTargetHash
             val sameIdx = currentStreamFileIdx == null || streamFileIdx == null || streamFileIdx == currentStreamFileIdx
-            val sameAddon = currentStreamAddonName == null || stream.addonName.equals(currentStreamAddonName, ignoreCase = true)
-            sameHash && sameIdx && sameAddon
+            sameHash && sameIdx
         }
         if (hashMatch >= 0) return hashMatch
     }
@@ -563,38 +562,56 @@ private fun findCurrentStreamIndex(
     if (targetFilenameNorm != null) {
         val fileMatch = streams.indexOfFirst { stream ->
             val streamFilenameNorm = normalize(stream.behaviorHints?.filename)
-            streamFilenameNorm == targetFilenameNorm
+            streamFilenameNorm == targetFilenameNorm ||
+                (streamFilenameNorm.length >= 8 && targetFilenameNorm.contains(streamFilenameNorm)) ||
+                (targetFilenameNorm.length >= 8 && streamFilenameNorm.contains(targetFilenameNorm))
         }
         if (fileMatch >= 0) return fileMatch
     }
 
-    // Strategy 5: match by streamName / displayName (fuzzy / contains or exact) + addon
-    if (targetNameNorm != null) {
-        val nameMatch = streams.indexOfFirst { stream ->
-            val streamNameNorm = normalize(stream.name ?: stream.getDisplayNameOrNull())
-            val sameAddon = currentStreamAddonName == null ||
-                stream.addonName.equals(currentStreamAddonName, ignoreCase = true)
-            if (!sameAddon) return@indexOfFirst false
-            streamNameNorm == targetNameNorm ||
-                (targetNameNorm.length >= 4 && streamNameNorm.contains(targetNameNorm)) ||
-                (streamNameNorm.length >= 4 && targetNameNorm.contains(streamNameNorm))
-        }
-        if (nameMatch >= 0) return nameMatch
-    }
-
-    // Strategy 6: match by exact or contained release description
+    // Strategy 5: match by description / title / details
     if (targetDescNorm != null) {
         val contentMatch = streams.indexOfFirst { stream ->
             val streamDescNorm = normalize(stream.description)
             val streamDisplayDescNorm = normalize(stream.getDisplayDescription())
-            val sameAddon = currentStreamAddonName == null ||
+            val streamTitleNorm = normalize(stream.title)
+            val sameAddon = currentStreamAddonName.isNullOrBlank() ||
                 stream.addonName.equals(currentStreamAddonName, ignoreCase = true)
-            (streamDescNorm == targetDescNorm || streamDisplayDescNorm == targetDescNorm ||
-                (streamDescNorm.length >= 10 && streamDescNorm.contains(targetDescNorm)) ||
-                (targetDescNorm.length >= 10 && targetDescNorm.contains(streamDescNorm))) &&
-                (sameAddon || targetDescNorm.length >= 20)
+
+            val matched = streamDescNorm == targetDescNorm ||
+                streamDisplayDescNorm == targetDescNorm ||
+                streamTitleNorm == targetDescNorm ||
+                (targetDescNorm.length >= 8 && (
+                    streamDescNorm.contains(targetDescNorm) || targetDescNorm.contains(streamDescNorm) ||
+                    streamDisplayDescNorm.contains(targetDescNorm) || targetDescNorm.contains(streamDisplayDescNorm) ||
+                    streamTitleNorm.contains(targetDescNorm) || targetDescNorm.contains(streamTitleNorm)
+                ))
+            matched && (sameAddon || targetDescNorm.length >= 12)
         }
         if (contentMatch >= 0) return contentMatch
+    }
+
+    // Strategy 6: match by streamName / displayName / combined title
+    if (targetNameNorm != null) {
+        val nameMatch = streams.indexOfFirst { stream ->
+            val streamNameNorm = normalize(stream.name)
+            val streamDisplayNameNorm = normalize(stream.getDisplayNameOrNull())
+            val streamTitleNorm = normalize(stream.title)
+            val combinedNorm = normalize("${stream.name} ${stream.title}")
+            val sameAddon = currentStreamAddonName.isNullOrBlank() ||
+                stream.addonName.equals(currentStreamAddonName, ignoreCase = true)
+
+            val matched = streamDisplayNameNorm == targetNameNorm ||
+                combinedNorm == targetNameNorm ||
+                streamNameNorm == targetNameNorm ||
+                streamTitleNorm == targetNameNorm ||
+                (targetNameNorm.length >= 4 && (
+                    streamDisplayNameNorm.contains(targetNameNorm) || targetNameNorm.contains(streamDisplayNameNorm) ||
+                    combinedNorm.contains(targetNameNorm) || targetNameNorm.contains(combinedNorm)
+                ))
+            matched && (sameAddon || targetNameNorm.length >= 8)
+        }
+        if (nameMatch >= 0) return nameMatch
     }
 
     return -1

@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -90,8 +91,23 @@ internal fun StreamItem(
     val context = LocalContext.current
     val density = LocalDensity.current
     val unknownStreamLabel = stringResource(R.string.stream_unknown)
-    val streamName = remember(stream, unknownStreamLabel) { stream.getDisplayNameOrNull() ?: unknownStreamLabel }
-    val streamDescription = remember(stream) { stream.getDisplayDescription() }
+    val streamName = remember(stream, unknownStreamLabel) {
+        val raw = stream.getDisplayNameOrNull() ?: unknownStreamLabel
+        raw.lineSequence()
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+            .trim()
+    }
+    val streamDescription = remember(stream, streamName) {
+        val raw = stream.getDisplayDescription()
+        raw?.lineSequence()
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
+            ?.joinToString("\n")
+            ?.trim()
+            ?.takeIf { it.isNotBlank() && it != streamName }
+    }
     val hasBadges = stream.badges.isNotEmpty() || (showFileSizeBadges && stream.behaviorHints?.videoSize != null)
     // Pre-upscale: decode at 2× target pixels so the hardware compositor
     // has enough pixel data for smooth edges inside Card RenderNodes.
@@ -124,8 +140,8 @@ internal fun StreamItem(
                 } else false
             } else Modifier),
         colors = CardDefaults.colors(
-            containerColor = NuvioTheme.colors.BackgroundElevated,
-            focusedContainerColor = NuvioTheme.colors.BackgroundElevated
+            containerColor = if (isCurrentStream) NuvioTheme.colors.Primary.copy(alpha = 0.12f) else NuvioTheme.colors.BackgroundElevated,
+            focusedContainerColor = if (isCurrentStream) NuvioTheme.colors.Primary.copy(alpha = 0.20f) else NuvioTheme.colors.BackgroundElevated
         ),
         shape = CardDefaults.shape(shape = RoundedCornerShape(NuvioTheme.radii.md)),
         border = CardDefaults.border(
@@ -146,13 +162,13 @@ internal fun StreamItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(NuvioTheme.spacing.lg),
+                .padding(horizontal = NuvioTheme.spacing.lg, vertical = NuvioTheme.spacing.md),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(NuvioTheme.spacing.lg)
+            horizontalArrangement = Arrangement.spacedBy(NuvioTheme.spacing.md)
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(NuvioTheme.spacing.xs)
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 if (hasBadges && badgePlacement == StreamBadgePlacement.TOP) {
                     StreamBadgeChips(
@@ -160,21 +176,24 @@ internal fun StreamItem(
                         fileSizeBytes = stream.behaviorHints?.videoSize,
                         showFileSizeBadge = showFileSizeBadges
                     )
-                    Spacer(modifier = Modifier.height(NuvioTheme.spacing.xxs))
+                    Spacer(modifier = Modifier.height(2.dp))
                 }
 
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     Row(
                         modifier = Modifier.align(streamName.contentTextDirection().toAbsoluteAlignment()),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(NuvioTheme.spacing.sm)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
                             text = streamName,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 textDirection = streamName.contentTextDirection()
                             ),
-                            color = NuvioTheme.colors.TextPrimary
+                            color = NuvioTheme.colors.TextPrimary,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
 
                         if (isCurrentStream) {
@@ -197,24 +216,24 @@ internal fun StreamItem(
                 }
 
                 streamDescription?.let { description ->
-                    if (description != streamName) {
-                        Text(
-                            text = description,
-                            modifier = Modifier.align(description.contentTextDirection().toAbsoluteAlignment()),
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                textDirection = description.contentTextDirection()
-                            ),
-                            color = NuvioTheme.extendedColors.textSecondary
-                        )
-                    }
+                    Text(
+                        text = description,
+                        modifier = Modifier.align(description.contentTextDirection().toAbsoluteAlignment()),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            textDirection = description.contentTextDirection(),
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp
+                        ),
+                        color = NuvioTheme.extendedColors.textSecondary
+                    )
                 }
 
                 if (hasBadges && badgePlacement == StreamBadgePlacement.BOTTOM) {
+                    Spacer(modifier = Modifier.height(2.dp))
                     StreamBadgeChips(
                         badges = stream.badges,
                         fileSizeBytes = stream.behaviorHints?.videoSize,
-                        showFileSizeBadge = showFileSizeBadges,
-                        modifier = Modifier.padding(top = NuvioTheme.spacing.xxs)
+                        showFileSizeBadge = showFileSizeBadges
                     )
                 }
             }

@@ -139,7 +139,7 @@ fun AboutSettingsContent(
                             )
 
                             Text(
-                                text = "Juansher | V1.2.1",
+                                text = "Juansher | V1.2.2",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = NuvioTheme.colors.TextSecondary,
                                 textAlign = TextAlign.Center

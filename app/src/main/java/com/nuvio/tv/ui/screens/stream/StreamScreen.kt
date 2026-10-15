@@ -60,6 +60,7 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.foundation.lazy.LazyColumn
@@ -1228,8 +1229,23 @@ private fun StreamCard(
     val context = LocalContext.current
     val density = LocalDensity.current
     val unknownStreamLabel = stringResource(R.string.stream_unknown)
-    val streamName = remember(stream, unknownStreamLabel) { stream.getDisplayNameOrNull() ?: unknownStreamLabel }
-    val streamDescription = remember(stream) { stream.getDisplayDescription() }
+    val streamName = remember(stream, unknownStreamLabel) {
+        val raw = stream.getDisplayNameOrNull() ?: unknownStreamLabel
+        raw.lineSequence()
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+            .trim()
+    }
+    val streamDescription = remember(stream, streamName) {
+        val raw = stream.getDisplayDescription()
+        raw?.lineSequence()
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
+            ?.joinToString("\n")
+            ?.trim()
+            ?.takeIf { it.isNotBlank() && it != streamName }
+    }
     val hasBadges = stream.badges.isNotEmpty() || (showFileSizeBadges && stream.behaviorHints?.videoSize != null) || reserveBadgeSpace
     val cardShape = RoundedCornerShape(NuvioTheme.radii.md)
     val hasGradientFocusRing = NuvioTheme.palette.focusRingGradient.size > 1
@@ -1324,16 +1340,16 @@ private fun StreamCard(
                 )
 
                 streamDescription?.let { description ->
-                    if (description.isNotBlank() && description != streamName) {
-                        Text(
-                            text = description,
-                            modifier = Modifier.align(description.contentTextDirection().toAbsoluteAlignment()),
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                textDirection = description.contentTextDirection()
-                            ),
-                            color = NuvioTheme.extendedColors.textSecondary
-                        )
-                    }
+                    Text(
+                        text = description,
+                        modifier = Modifier.align(description.contentTextDirection().toAbsoluteAlignment()),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            textDirection = description.contentTextDirection(),
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp
+                        ),
+                        color = NuvioTheme.extendedColors.textSecondary
+                    )
                 }
 
                 if (hasBadges && badgePlacement == StreamBadgePlacement.BOTTOM) {
