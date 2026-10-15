@@ -19,7 +19,7 @@ import com.nuvio.tv.domain.model.StreamClientResolveStream
 fun StreamDto.toDomain(addonName: String, addonLogo: String?): Stream = Stream(
     name = name,
     title = title,
-    description = description,
+    description = description ?: title,
     url = url,
     ytId = ytId,
     infoHash = infoHash,
