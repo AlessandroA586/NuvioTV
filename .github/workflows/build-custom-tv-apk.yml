@@ -73,22 +73,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete v1.2.0 --yes --repo "${{ github.repository }}" || true
-          git tag -d v1.2.0 || true
-          git push origin :refs/tags/v1.2.0 || true
+          gh release delete v1.2.1 --yes --repo "${{ github.repository }}" || true
+          git tag -d v1.2.1 || true
+          git push origin :refs/tags/v1.2.1 || true
 
           cat << 'EOF' > release_notes.md
-          Versión personalizada de Nuvio Android TV v1.2.0 para Smart TV y TV Box.
+          Versión personalizada de Nuvio Android TV v1.2.1 para Smart TV y TV Box.
 
-          ### Novedades de la versión v1.2.0:
+          ### Novedades de la versión v1.2.1:
           - Carga instantánea de fuentes en reproducción: Al abrir el panel de fuentes (icono de la nube) durante la reproducción, se muestran inmediatamente las fuentes obtenidas en la búsqueda inicial con complementos, sin esperas de red adicionales.
           - Estabilidad en Android TV: Solución del cierre inesperado al iniciar la aplicación en televisores y dispositivos Android TV.
           - Información de versión en Ajustes: Separación clara entre la versión oficial del creador y la versión personalizada de Juansher.
           - Identificador de versión: Juansher | V1.2.0.
           EOF
 
-          gh release create v1.2.0 dist/*.apk \
+          gh release create v1.2.1 dist/*.apk \
             --repo "${{ github.repository }}" \
             --target "${{ github.ref_name }}" \
-            --title "Nuvio TV Custom v1.2.0 (Juansher)" \
+            --title "Nuvio TV Custom v1.2.1 (Juansher)" \
             --notes-file release_notes.md
