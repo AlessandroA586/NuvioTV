@@ -50,6 +50,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import com.nuvio.tv.domain.model.Stream
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import com.nuvio.tv.ui.components.LoadingIndicator
 import com.nuvio.tv.ui.components.SourceChipStatus
 import com.nuvio.tv.ui.theme.NuvioTheme
@@ -165,13 +166,38 @@ internal fun StreamSourcesSidePanel(
         trackedFirstStreamKey = firstStreamKey
     }
 
-    LaunchedEffect(firstStreamFocusRequestId) {
-        val requestedKey = firstStreamKey
-        if (firstStreamFocusRequestId <= 0 || requestedKey == null) return@LaunchedEffect
-        streamListState.scrollToItem(0)
+    val targetCurrentIndex = remember(
+        uiState.sourceFilteredStreams,
+        uiState.currentStreamInfoHash,
+        uiState.currentStreamFileIdx,
+        uiState.currentStreamAddonName,
+        uiState.currentStreamUrl,
+        uiState.initialStreamUrl,
+        uiState.currentStreamName,
+        uiState.currentStreamDescription,
+        uiState.currentStreamFilename
+    ) {
+        findCurrentStreamIndex(
+            streams = uiState.sourceFilteredStreams,
+            currentStreamInfoHash = uiState.currentStreamInfoHash,
+            currentStreamFileIdx = uiState.currentStreamFileIdx,
+            currentStreamAddonName = uiState.currentStreamAddonName,
+            currentStreamUrl = uiState.currentStreamUrl,
+            initialStreamUrl = uiState.initialStreamUrl,
+            currentStreamName = uiState.currentStreamName,
+            currentStreamDescription = uiState.currentStreamDescription,
+            currentStreamFilename = uiState.currentStreamFilename
+        )
+    }
+
+    LaunchedEffect(firstStreamFocusRequestId, targetCurrentIndex) {
+        if (firstStreamFocusRequestId <= 0) return@LaunchedEffect
+        val targetIdx = if (targetCurrentIndex in streamKeys.indices) targetCurrentIndex else 0
+        val requestedKey = streamKeys.getOrNull(targetIdx) ?: firstStreamKey ?: return@LaunchedEffect
+        streamListState.scrollToItem(targetIdx)
         repeat(30) {
             withFrameNanos { }
-            if (firstCardHasFocus) return@LaunchedEffect
+            if (focusedStreamKey == requestedKey) return@LaunchedEffect
             runCatching { streamFocusRequesters.getValue(requestedKey).requestFocus() }
         }
     }
@@ -342,6 +368,7 @@ internal fun StreamSourcesSidePanel(
                         currentStreamFileIdx = uiState.currentStreamFileIdx,
                         currentStreamAddonName = uiState.currentStreamAddonName,
                         currentStreamUrl = uiState.currentStreamUrl,
+                        initialStreamUrl = uiState.initialStreamUrl,
                         currentStreamName = uiState.currentStreamName,
                         currentStreamDescription = uiState.currentStreamDescription,
                         currentStreamFilename = uiState.currentStreamFilename
@@ -476,42 +503,63 @@ private fun findCurrentStreamIndex(
     currentStreamFileIdx: Int?,
     currentStreamAddonName: String?,
     currentStreamUrl: String?,
+    initialStreamUrl: String?,
     currentStreamName: String?,
     currentStreamDescription: String? = null,
     currentStreamFilename: String? = null
 ): Int {
     if (streams.isEmpty()) return -1
 
-    // Strategy 1: match by infoHash + fileIdx + addonName
-    if (!currentStreamInfoHash.isNullOrBlank()) {
+    fun canonical(url: String?): String? =
+        url?.toHttpUrlOrNull()?.toString() ?: url
+
+    val initialCanonical = canonical(initialStreamUrl)
+    val currentCanonical = canonical(currentStreamUrl)
+
+    // Strategy 1: match by initialStreamUrl (exact URL before any HTTP redirects)
+    if (!initialStreamUrl.isNullOrBlank()) {
+        val initMatch = streams.indexOfFirst { stream ->
+            val direct = stream.getStreamUrl()
+            val raw = stream.url
+            direct == initialStreamUrl || raw == initialStreamUrl ||
+                (initialCanonical != null && (canonical(direct) == initialCanonical || canonical(raw) == initialCanonical))
+        }
+        if (initMatch >= 0) return initMatch
+    }
+
+    // Strategy 2: match by direct URL (currentStreamUrl)
+    if (!currentStreamUrl.isNullOrBlank()) {
+        val urlMatch = streams.indexOfFirst { stream ->
+            val direct = stream.getStreamUrl()
+            val raw = stream.url
+            direct == currentStreamUrl || raw == currentStreamUrl ||
+                (currentCanonical != null && (canonical(direct) == currentCanonical || canonical(raw) == currentCanonical))
+        }
+        if (urlMatch >= 0) return urlMatch
+    }
+
+    // Strategy 3: match by infoHash + fileIdx + addonName
+    val effectiveTargetHash = currentStreamInfoHash?.trim()?.lowercase()
+    if (!effectiveTargetHash.isNullOrBlank()) {
         val hashMatch = streams.indexOfFirst { stream ->
-            val streamInfoHash = stream.infoHash ?: stream.clientResolve?.infoHash
+            val streamInfoHash = (stream.infoHash ?: stream.clientResolve?.infoHash)?.trim()?.lowercase()
             val streamFileIdx = stream.fileIdx ?: stream.clientResolve?.fileIdx
-            val sameHash = streamInfoHash.equals(currentStreamInfoHash, ignoreCase = true)
-            val sameIdx = currentStreamFileIdx == null || streamFileIdx == currentStreamFileIdx
+            val sameHash = streamInfoHash == effectiveTargetHash
+            val sameIdx = currentStreamFileIdx == null || streamFileIdx == null || streamFileIdx == currentStreamFileIdx
             val sameAddon = currentStreamAddonName == null || stream.addonName.equals(currentStreamAddonName, ignoreCase = true)
             sameHash && sameIdx && sameAddon
         }
         if (hashMatch >= 0) return hashMatch
     }
 
-    // Strategy 2: match by direct URL
-    if (!currentStreamUrl.isNullOrBlank()) {
-        val urlMatch = streams.indexOfFirst { stream ->
-            val direct = stream.getStreamUrl()
-            !direct.isNullOrBlank() && direct == currentStreamUrl
-        }
-        if (urlMatch >= 0) return urlMatch
-    }
-
     fun normalize(s: String?): String =
         s.orEmpty().lowercase().replace(Regex("[^a-z0-9]"), "")
 
-    val targetFilenameNorm = normalize(currentStreamFilename).takeIf { it.length >= 5 }
-    val targetDescNorm = normalize(currentStreamDescription).takeIf { it.length >= 5 }
-    val targetNameNorm = normalize(currentStreamName).takeIf { it.length >= 3 }
+    val targetFilenameNorm = normalize(currentStreamFilename).takeIf { it.length >= 4 }
+    val targetDescNorm = normalize(currentStreamDescription).takeIf { it.length >= 4 }
+    val targetNameNorm = normalize(currentStreamName).takeIf { it.isNotEmpty() }
 
-    // Strategy 3: match by filename
+    // Strategy 4: match by filename
     if (targetFilenameNorm != null) {
         val fileMatch = streams.indexOfFirst { stream ->
             val streamFilenameNorm = normalize(stream.behaviorHints?.filename)
@@ -520,27 +568,30 @@ private fun findCurrentStreamIndex(
         if (fileMatch >= 0) return fileMatch
     }
 
-    // Strategy 4: match by exact streamName / displayName + addonName
+    // Strategy 5: match by streamName / displayName (fuzzy / contains or exact) + addon
     if (targetNameNorm != null) {
         val nameMatch = streams.indexOfFirst { stream ->
             val streamNameNorm = normalize(stream.name ?: stream.getDisplayNameOrNull())
             val sameAddon = currentStreamAddonName == null ||
                 stream.addonName.equals(currentStreamAddonName, ignoreCase = true)
-            val streamDescNorm = normalize(stream.getDisplayDescription())
-            val descMatches = targetDescNorm == null || streamDescNorm.isEmpty() || streamDescNorm == targetDescNorm
-            sameAddon && streamNameNorm == targetNameNorm && descMatches
+            if (!sameAddon) return@indexOfFirst false
+            streamNameNorm == targetNameNorm ||
+                (targetNameNorm.length >= 4 && streamNameNorm.contains(targetNameNorm)) ||
+                (streamNameNorm.length >= 4 && targetNameNorm.contains(streamNameNorm))
         }
         if (nameMatch >= 0) return nameMatch
     }
 
-    // Strategy 5: match by exact normalized release description
+    // Strategy 6: match by exact or contained release description
     if (targetDescNorm != null) {
         val contentMatch = streams.indexOfFirst { stream ->
             val streamDescNorm = normalize(stream.description)
             val streamDisplayDescNorm = normalize(stream.getDisplayDescription())
             val sameAddon = currentStreamAddonName == null ||
                 stream.addonName.equals(currentStreamAddonName, ignoreCase = true)
-            (streamDescNorm == targetDescNorm || streamDisplayDescNorm == targetDescNorm) &&
+            (streamDescNorm == targetDescNorm || streamDisplayDescNorm == targetDescNorm ||
+                (streamDescNorm.length >= 10 && streamDescNorm.contains(targetDescNorm)) ||
+                (targetDescNorm.length >= 10 && targetDescNorm.contains(streamDescNorm))) &&
                 (sameAddon || targetDescNorm.length >= 20)
         }
         if (contentMatch >= 0) return contentMatch
