@@ -244,7 +244,7 @@ internal fun PlayerRuntimeController.loadSourceStreams(forceRefresh: Boolean) {
                     )
                 }
                 sourceStreamsFetchCompleted = true
-                launchBadgePresentationForVisibleStreams(paginatedStreams)
+                scheduleSourceBadgeApplication()
                 return@launch
             }
         }
