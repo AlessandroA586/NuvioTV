@@ -660,7 +660,7 @@ private fun PlayerRuntimeController.applyStreamMetadata(stream: Stream) {
     streamSubtitles = stream.subtitles
     currentAddonName = stream.addonName
     currentAddonLogo = stream.addonLogo
-    currentStreamDescription = stream.description
+    currentStreamDescription = stream.getDisplayDescription() ?: stream.title ?: stream.description
     currentVideoCodec = null
     currentVideoWidth = null
     currentVideoHeight = null
@@ -718,7 +718,7 @@ internal fun PlayerRuntimeController.handleStreamRedirect(requestedUrl: String, 
         currentStreamBingeGroup = target.behaviorHints?.bingeGroup
         currentAddonName = target.addonName
         currentAddonLogo = target.addonLogo
-        currentStreamDescription = target.description
+        currentStreamDescription = target.getDisplayDescription() ?: target.title ?: target.description
         persistBingeGroup(currentStreamBingeGroup)
         _uiState.update {
             it.copy(
@@ -979,7 +979,7 @@ internal fun PlayerRuntimeController.switchToSourceStream(
             isBuffering = true,
             error = null,
             currentStreamName = stream.name ?: stream.addonName,
-            currentStreamDescription = stream.description,
+            currentStreamDescription = stream.getDisplayDescription() ?: stream.title ?: stream.description,
             currentStreamFilename = stream.behaviorHints?.filename,
             currentStreamUrl = playbackUrl,
             currentStreamInfoHash = stream.infoHash ?: stream.clientResolve?.infoHash,
@@ -1093,7 +1093,7 @@ private fun PlayerRuntimeController.switchToTorrentSourceStream(
             isBuffering = true,
             error = null,
             currentStreamName = stream.name ?: stream.addonName,
-            currentStreamDescription = stream.description,
+            currentStreamDescription = stream.getDisplayDescription() ?: stream.title ?: stream.description,
             currentStreamFilename = stream.behaviorHints?.filename,
             currentStreamUrl = "",
             currentStreamInfoHash = stream.infoHash ?: stream.clientResolve?.infoHash,
@@ -1585,7 +1585,7 @@ internal fun PlayerRuntimeController.switchToEpisodeStream(
             currentVideoId = currentVideoId,
             currentEpisodeTitle = currentEpisodeTitle,
             currentStreamName = stream.name ?: stream.addonName,
-            currentStreamDescription = stream.description,
+            currentStreamDescription = stream.getDisplayDescription() ?: stream.title ?: stream.description,
             currentStreamFilename = stream.behaviorHints?.filename,
             currentStreamUrl = playbackUrl,
             currentStreamInfoHash = stream.infoHash ?: stream.clientResolve?.infoHash,
