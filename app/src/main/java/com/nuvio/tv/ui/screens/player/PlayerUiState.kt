@@ -71,6 +71,7 @@ data class PlayerUiState(
     val currentStreamDescription: String? = null,
     val currentStreamFilename: String? = null,
     val currentStreamUrl: String? = null,
+    val initialStreamUrl: String? = null,
     val currentStreamInfoHash: String? = null, // InfoHash of the currently playing stream (for debrid matching)
     val currentStreamFileIdx: Int? = null, // FileIdx of the currently playing stream (for debrid matching)
     val currentStreamAddonName: String? = null, // Addon name of the currently playing stream
