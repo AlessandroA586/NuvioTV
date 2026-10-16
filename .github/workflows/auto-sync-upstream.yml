@@ -47,64 +47,7 @@ jobs:
         if: steps.check_upstream.outputs.has_updates == 'true'
         run: |
           git merge upstream/dev --no-edit -m "chore(sync): merge upstream updates from NuvioMedia/NuvioTV" || true
-          
-          # 0. Automatically resolve version conflicts in app/build.gradle.kts if upstream changed versionCode/versionName
-          GRADLE_FILE="app/build.gradle.kts"
-          if [ -f "$GRADLE_FILE" ]; then
-            python3 -c '
-import re
-
-with open("app/build.gradle.kts", "r") as f:
-    text = f.read()
-
-conflict_pattern = re.compile(
-    r"<<<<<<< HEAD\s+versionCode\s*=\s*(\d+)\s+versionName\s*=\s*"([^"]+)"\s+=======\s+versionCode\s*=\s*(\d+)\s+versionName\s*=\s*"([^"]+)"\s+>>>>>>> [^\n]+",
-    re.MULTILINE
-)
-
-def fix_version(match):
-    head_code = int(match.group(1))
-    head_name = match.group(2)
-    up_code = int(match.group(3))
-    new_code = max(head_code, up_code) + 1
-    parts = head_name.split(".")
-    try:
-        parts[-1] = str(int(parts[-1]) + 1)
-        new_name = ".".join(parts)
-    except Exception:
-        new_name = f"{head_name}.1"
-    return f"        versionCode = {new_code}\n        versionName = \"{new_name}\""
-
-fixed_text = conflict_pattern.sub(fix_version, text)
-with open("app/build.gradle.kts", "w") as f:
-    f.write(fixed_text)
-'
-          fi
-
-          # 1. Ensure StreamAutoPlaySelector does not contain getStreamUrl()
-          AUTO_FILE="app/src/main/java/com/nuvio/tv/core/player/StreamAutoPlaySelector.kt"
-          if [ -f "$AUTO_FILE" ]; then
-            sed -i '/append(stream.getStreamUrl().orEmpty())/d' "$AUTO_FILE"
-          fi
-          
-          # 2. Ensure AboutScreen displays Juansher version
-          ABOUT_FILE="app/src/main/java/com/nuvio/tv/ui/screens/settings/AboutScreen.kt"
-          if [ -f "$ABOUT_FILE" ]; then
-            sed -i 's/stringResource(R.string.about_version, BuildConfig.VERSION_NAME)/"Juansher | V${BuildConfig.VERSION_NAME}"/g' "$ABOUT_FILE"
-          fi
-          
-          # 3. Ensure GITHUB_OWNER points to AlessandroA586
-          if [ -f "$GRADLE_FILE" ]; then
-            sed -i 's/"NuvioMedia"/"AlessandroA586"/g' "$GRADLE_FILE"
-          fi
-          
-          # 4. Clean any invalid escape sequences in values-it
-          IT_STRINGS="app/src/main/res/values-it/strings.xml"
-          if [ -f "$IT_STRINGS" ]; then
-            sed -i "s/l\'RPU/l'RPU/g" "$IT_STRINGS"
-            sed -i "s/dell\'opzione/dell'opzione/g" "$IT_STRINGS"
-          fi
-          
+          python3 scripts/resolve_sync_conflicts.py
           git add -A
           if [ -f .git/MERGE_HEAD ]; then
             git commit --no-edit -m "chore(sync): merge upstream updates and resolve Juansher customizations"
@@ -177,9 +120,18 @@ with open("app/build.gradle.kts", "w") as f:
           gh release delete "${TAG}" --yes --repo "${{ github.repository }}" || true
           git tag -d "${TAG}" || true
           git push origin ":refs/tags/${TAG}" || true
-          
-          gh release create "${TAG}" dist/*.apk             --repo "${{ github.repository }}"             --target dev             --title "Nuvio TV Custom ${TAG} (Juansher)"             --notes "Versión actualizada automáticamente de Nuvio TV ${TAG}.
-          - Sincronizado con las novedades de NuvioMedia/NuvioTV.
+
+          cat << EOF > release_notes.md
+          Versión personalizada de Nuvio Android TV ${TAG} (Juansher) para Smart TV y TV Box.
+
+          - Sincronizado automáticamente con las novedades oficiales de NuvioMedia/NuvioTV.
           - Filtro Regex en auto-play corregido.
           - Identificador: Juansher | V${VERSION}.
-          - Firmado permanentemente con llave Juansher."
+          - Firmado permanentemente con llave Juansher.
+          EOF
+          
+          gh release create "${TAG}" dist/*.apk \
+            --repo "${{ github.repository }}" \
+            --target dev \
+            --title "Nuvio TV Custom ${TAG} (Juansher)" \
+            --notes-file release_notes.md
