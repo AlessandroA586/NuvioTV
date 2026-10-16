@@ -73,22 +73,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete v1.2.2 --yes --repo "${{ github.repository }}" || true
-          git tag -d v1.2.2 || true
-          git push origin :refs/tags/v1.2.2 || true
+          VERSION=$(grep -m1 'versionName' app/build.gradle.kts | cut -d '"' -f2)
+          TAG="v${VERSION}"
 
-          cat << 'EOF' > release_notes.md
-          Versión personalizada de Nuvio Android TV v1.2.2 para Smart TV y TV Box.
+          gh release delete "${TAG}" --yes --repo "${{ github.repository }}" || true
+          git tag -d "${TAG}" || true
+          git push origin ":refs/tags/${TAG}" || true
 
-          ### Novedades de la versión v1.2.2:
-          - Tarjeta de fuente en reproducción: Eliminación de espacios vacíos excesivos y ajuste a tamaño compacto normal.
-          - Indicador de fuente activa: Detección y visualización del distintivo «Reproduciendo» en el panel lateral durante la reproducción.
-          - Información de versión en Ajustes: Separación clara entre la versión oficial del creador y la versión personalizada de Juansher.
-          - Identificador de versión: Juansher | V1.2.2.
+          cat << EOF > release_notes.md
+          Versión personalizada de Nuvio Android TV ${TAG} (Juansher) para Smart TV y TV Box.
+
+          ### Novedades de la versión ${TAG}:
+          - Sincronizado con las novedades oficiales de NuvioMedia/NuvioTV.
+          - Redirección de fuentes y control de recomposiciones D-pad.
+          - Identificador de versión: Juansher | V${VERSION}.
+          - Firmado permanentemente con llave Juansher.
           EOF
 
-          gh release create v1.2.2 dist/*.apk \
-            --repo "${{ github.repository }}" \
-            --target "${{ github.ref_name }}" \
-            --title "Nuvio TV Custom v1.2.2 (Juansher)" \
-            --notes-file release_notes.md
+          gh release create "${TAG}" dist/*.apk             --repo "${{ github.repository }}"             --target "${{ github.ref_name }}"             --title "Nuvio TV Custom ${TAG} (Juansher)"             --notes-file release_notes.md
