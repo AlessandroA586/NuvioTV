@@ -48,6 +48,39 @@ jobs:
         run: |
           git merge upstream/dev --no-edit -m "chore(sync): merge upstream updates from NuvioMedia/NuvioTV" || true
           
+          # 0. Automatically resolve version conflicts in app/build.gradle.kts if upstream changed versionCode/versionName
+          GRADLE_FILE="app/build.gradle.kts"
+          if [ -f "$GRADLE_FILE" ]; then
+            python3 -c '
+import re
+
+with open("app/build.gradle.kts", "r") as f:
+    text = f.read()
+
+conflict_pattern = re.compile(
+    r"<<<<<<< HEAD\s+versionCode\s*=\s*(\d+)\s+versionName\s*=\s*"([^"]+)"\s+=======\s+versionCode\s*=\s*(\d+)\s+versionName\s*=\s*"([^"]+)"\s+>>>>>>> [^\n]+",
+    re.MULTILINE
+)
+
+def fix_version(match):
+    head_code = int(match.group(1))
+    head_name = match.group(2)
+    up_code = int(match.group(3))
+    new_code = max(head_code, up_code) + 1
+    parts = head_name.split(".")
+    try:
+        parts[-1] = str(int(parts[-1]) + 1)
+        new_name = ".".join(parts)
+    except Exception:
+        new_name = f"{head_name}.1"
+    return f"        versionCode = {new_code}\n        versionName = \"{new_name}\""
+
+fixed_text = conflict_pattern.sub(fix_version, text)
+with open("app/build.gradle.kts", "w") as f:
+    f.write(fixed_text)
+'
+          fi
+
           # 1. Ensure StreamAutoPlaySelector does not contain getStreamUrl()
           AUTO_FILE="app/src/main/java/com/nuvio/tv/core/player/StreamAutoPlaySelector.kt"
           if [ -f "$AUTO_FILE" ]; then
@@ -61,7 +94,6 @@ jobs:
           fi
           
           # 3. Ensure GITHUB_OWNER points to AlessandroA586
-          GRADLE_FILE="app/build.gradle.kts"
           if [ -f "$GRADLE_FILE" ]; then
             sed -i 's/"NuvioMedia"/"AlessandroA586"/g' "$GRADLE_FILE"
           fi
@@ -69,12 +101,16 @@ jobs:
           # 4. Clean any invalid escape sequences in values-it
           IT_STRINGS="app/src/main/res/values-it/strings.xml"
           if [ -f "$IT_STRINGS" ]; then
-            sed -i "s/l\\'RPU/l'RPU/g" "$IT_STRINGS"
-            sed -i "s/dell\\'opzione/dell'opzione/g" "$IT_STRINGS"
+            sed -i "s/l\'RPU/l'RPU/g" "$IT_STRINGS"
+            sed -i "s/dell\'opzione/dell'opzione/g" "$IT_STRINGS"
           fi
           
           git add -A
-          git diff-index --quiet HEAD || git commit -m "chore: reapply Juansher customizations and updater targeting"
+          if [ -f .git/MERGE_HEAD ]; then
+            git commit --no-edit -m "chore(sync): merge upstream updates and resolve Juansher customizations"
+          else
+            git diff-index --quiet HEAD || git commit -m "chore: reapply Juansher customizations and updater targeting"
+          fi
           git push origin dev
 
       - name: Set up Java 17
@@ -142,11 +178,7 @@ jobs:
           git tag -d "${TAG}" || true
           git push origin ":refs/tags/${TAG}" || true
           
-          gh release create "${TAG}" dist/*.apk \
-            --repo "${{ github.repository }}" \
-            --target dev \
-            --title "Nuvio TV Custom ${TAG} (Juansher)" \
-            --notes "Versión actualizada automáticamente de Nuvio TV ${TAG}.
+          gh release create "${TAG}" dist/*.apk             --repo "${{ github.repository }}"             --target dev             --title "Nuvio TV Custom ${TAG} (Juansher)"             --notes "Versión actualizada automáticamente de Nuvio TV ${TAG}.
           - Sincronizado con las novedades de NuvioMedia/NuvioTV.
           - Filtro Regex en auto-play corregido.
           - Identificador: Juansher | V${VERSION}.
