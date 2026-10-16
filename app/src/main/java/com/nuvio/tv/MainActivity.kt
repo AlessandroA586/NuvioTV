@@ -867,6 +867,7 @@ open class MainActivity : ComponentActivity() {
 
                     LaunchedEffect(actualRoute) {
                         optimisticRoute = null
+                        ambientIdleController.onInteraction()
                     }
 
                     // Auto-play next episode for EXTERNAL players: the tracker resolves the
@@ -1203,9 +1204,15 @@ open class MainActivity : ComponentActivity() {
                                 )
                             }
 
+                            val isTrailerPlaying by trailerPlayerPool.isTrailerPlaying.collectAsState()
+                            LaunchedEffect(isTrailerPlaying) {
+                                if (!isTrailerPlaying) ambientIdleController.onInteraction()
+                            }
                             AmbientModeHost(
                                 controller = ambientIdleController,
-                                allowed = currentRoute?.startsWith("player/") != true && autoNextOverlay == null,
+                                allowed = currentRoute?.startsWith("player/") != true &&
+                                    autoNextOverlay == null &&
+                                    !isTrailerPlaying,
                                 onShown = { trailerPlayerPool.stop() }
                             )
                         }

@@ -7,10 +7,13 @@ import android.view.SurfaceHolder
 import com.nuvio.tv.data.local.MpvHardwareDecodeMode
 import com.nuvio.tv.data.local.SubtitleStyleSettings
 import `is`.xyz.mpv.BaseMPVView
+import `is`.xyz.mpv.MPV
 import `is`.xyz.mpv.Utils
 import java.util.Locale
 import kotlin.math.pow
 import kotlin.math.roundToLong
+
+internal const val MPV_TRACK_LIST_PROPERTY = "track-list"
 
 class NuvioMpvSurfaceView @JvmOverloads constructor(
     context: Context,
@@ -694,7 +697,9 @@ class NuvioMpvSurfaceView @JvmOverloads constructor(
     }
 
     override fun observeProperties() {
-        // Progress is polled by PlayerRuntimeController.
+        // Progress is polled by PlayerRuntimeController. Track-list changes are pushed so
+        // the poll can skip re-reading an unchanged track list.
+        mpv.observeProperty(MPV_TRACK_LIST_PROPERTY, MPV.mpvFormat.MPV_FORMAT_NONE)
     }
 
     private fun applyHeaders(headers: Map<String, String>) {
