@@ -193,7 +193,7 @@ class DebridStreamFormatter @Inject constructor(
             "ja", "jpn", "japanese" -> "🇯🇵"
             "ko", "kor", "korean" -> "🇰🇷"
             "fr", "fre", "fra", "french" -> "🇫🇷"
-            "es", "spa", "spanish" -> "🇪🇸"
+            "es", "spa", "spn", "esp", "spanish" -> "🇪🇸"
             "de", "ger", "deu", "german" -> "🇩🇪"
             "it", "ita", "italian" -> "🇮🇹"
             "multi" -> "Multi"

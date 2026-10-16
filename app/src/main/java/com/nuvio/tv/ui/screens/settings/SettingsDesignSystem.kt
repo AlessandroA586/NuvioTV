@@ -136,6 +136,14 @@ internal fun settingsFocusFillColor(): Color = NuvioTheme.colors.TextPrimary.cop
 
 @Composable
 @androidx.compose.runtime.ReadOnlyComposable
+internal fun settingsHeaderInset(): Dp = when (NuvioTheme.settingsUiStyle) {
+    SettingsUiStyle.CLASSIC -> 0.dp
+    SettingsUiStyle.ZEN -> NuvioTheme.spacing.md
+    SettingsUiStyle.HORIZON -> NuvioTheme.spacing.xs
+}
+
+@Composable
+@androidx.compose.runtime.ReadOnlyComposable
 internal fun settingsRowShape(): RoundedCornerShape = when (NuvioTheme.settingsUiStyle) {
     SettingsUiStyle.CLASSIC -> RoundedCornerShape(SettingsPillRadius)
     SettingsUiStyle.ZEN -> SettingsZenRowShape
@@ -595,7 +603,7 @@ internal fun SettingsDetailHeader(
         SettingsUiStyle.ZEN -> Column(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(start = NuvioTheme.spacing.md, bottom = NuvioTheme.spacing.sm),
+                .padding(start = settingsHeaderInset(), bottom = NuvioTheme.spacing.sm),
             verticalArrangement = Arrangement.spacedBy(NuvioTheme.spacing.sm)
         ) {
             Text(
@@ -612,7 +620,7 @@ internal fun SettingsDetailHeader(
         SettingsUiStyle.HORIZON -> Column(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(start = NuvioTheme.spacing.xs, bottom = NuvioTheme.spacing.sm),
+                .padding(start = settingsHeaderInset(), bottom = NuvioTheme.spacing.sm),
             verticalArrangement = Arrangement.spacedBy(NuvioTheme.spacing.xs)
         ) {
             Text(
