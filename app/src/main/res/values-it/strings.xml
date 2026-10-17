@@ -789,7 +789,7 @@
     <string name="dv7_libdovi_mode_2_title" translatable="false">Modalit\u00e0 2 - 8.1 (mappatura senza effetto)</string>
     <string name="dv7_libdovi_mode_2_sub" translatable="false">Converte al profilo 8.1 con la mappatura di luminanza e crominanza impostata senza effetto. \u00c8 la conversione standard.</string>
     <string name="dv7_libdovi_mode_3_title" translatable="false">Modalit\u00e0 3 - Profilo 5 a 8.1</string>
-    <string name="dv7_libdovi_mode_3_sub" translatable="false">Converte gli stream del profilo 5 (DV5) al profilo 8.1. Stessa conversione dell\'opzione Converti DV5 in DV8.1.</string>
+    <string name="dv7_libdovi_mode_3_sub" translatable="false">Converte gli stream del profilo 5 (DV5) al profilo 8.1. Stessa conversione dell'opzione Converti DV5 in DV8.1.</string>
     <string name="dv7_libdovi_mode_4_title" translatable="false">Modalit\u00e0 4 - 8.4 (statico)</string>
     <string name="dv7_libdovi_mode_4_sub" translatable="false">Converte al profilo statico 8.4.</string>
 <string name="audio_mpv_hwdec_title">Decodifica Hardware (Solo MPV)</string>
