@@ -1076,7 +1076,7 @@ fun PlayerScreen(
                         isPlaying = uiState.isPlaying,
                         isBuffering = uiState.isBuffering,
                         aspectMode = uiState.aspectMode,
-                        subtitleStyle = uiState.subtitleStyle,
+                        subtitleStyle = uiState.effectiveSubtitleStyle,
                         subtitleLiftPx = subtitleLiftPx,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -1092,7 +1092,7 @@ fun PlayerScreen(
                             tunneledSurfaceFill = uiState.tunneledSurfaceFill,
                             useLibass = uiState.useLibass,
                             libassRenderType = uiState.libassRenderType,
-                            subtitleStyle = uiState.subtitleStyle,
+                            subtitleStyle = uiState.effectiveSubtitleStyle,
                             subtitleLiftPx = subtitleLiftPx,
                             onBindSubtitleView = viewModel::bindExoSubtitleView,
                             modifier = Modifier.fillMaxSize()
@@ -1807,7 +1807,8 @@ fun PlayerScreen(
                 val isAssDisabled = isCurrentSubtitleAss && (isUsingMpv || uiState.useLibass)
 
                 SubtitleStyleSidePanel(
-                    subtitleStyle = uiState.subtitleStyle,
+                    subtitleStyle = uiState.editableSubtitleStyle,
+                    isEditingHdrStyle = uiState.isEditingHdrSubtitleStyle,
                     onEvent = { if (!isAssDisabled) viewModel.onEvent(it) },
                     isStyleDisabledByLibass = isAssDisabled,
                     modifier = Modifier
@@ -1852,7 +1853,8 @@ fun PlayerScreen(
             },
             addonSubtitles = uiState.addonSubtitles,
             selectedAddonSubtitle = uiState.selectedAddonSubtitle,
-            subtitleStyle = uiState.subtitleStyle,
+            subtitleStyle = uiState.editableSubtitleStyle,
+            isEditingHdrStyle = uiState.isEditingHdrSubtitleStyle,
             subtitleDelayMs = uiState.subtitleDelayMs,
             installedSubtitleAddonOrder = uiState.installedSubtitleAddonOrder,
             isLoadingAddons = uiState.isLoadingAddonSubtitles,

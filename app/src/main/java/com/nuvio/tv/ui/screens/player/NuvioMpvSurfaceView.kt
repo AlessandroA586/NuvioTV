@@ -461,6 +461,17 @@ class NuvioMpvSurfaceView @JvmOverloads constructor(
         }
     }
 
+    /** True for PQ/HLG video, false for any other transfer, null until mpv knows the video params. */
+    fun readVideoIsHdr(): Boolean? {
+        if (!initialized) return null
+        val gamma = runCatching { mpv.getPropertyString("video-params/gamma") }.getOrNull()
+            ?.trim()
+            ?.lowercase(Locale.ROOT)
+            ?.takeIf { it.isNotBlank() }
+            ?: return null
+        return gamma == "pq" || gamma == "hlg"
+    }
+
     private fun isAssOrSsaSubtitleSelectedNow(): Boolean {
         if (!initialized) return false
         val trackCount = mpv.getPropertyInt("track-list/count") ?: return false

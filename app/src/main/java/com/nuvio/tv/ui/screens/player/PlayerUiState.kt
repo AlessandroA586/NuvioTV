@@ -126,6 +126,8 @@ data class PlayerUiState(
     val showMoreDialog: Boolean = false,
     // Subtitle style settings
     val subtitleStyle: SubtitleStyleSettings = SubtitleStyleSettings(),
+    // Current video is HDR10/HDR10+/HLG/Dolby Vision; selects the HDR subtitle style when enabled
+    val isHdrVideo: Boolean = false,
     // Addon subtitles
     val addonSubtitles: List<Subtitle> = emptyList(),
     val isLoadingAddonSubtitles: Boolean = false,
@@ -239,7 +241,18 @@ data class PlayerUiState(
     // from loading overlay, rebuffering indicator, and corner overlay.
     val hideTorrentStats: Boolean = true,
     val isLive: Boolean = false
-)
+) {
+    /** Subtitle style to render with, after applying the HDR override for the current video. */
+    val effectiveSubtitleStyle: SubtitleStyleSettings
+        get() = subtitleStyle.forVideo(isHdrVideo)
+
+    /** In-player style edits to the text color go to the HDR override while this is true. */
+    val isEditingHdrSubtitleStyle: Boolean
+        get() = isHdrVideo && subtitleStyle.hdrStyleEnabled
+
+    val editableSubtitleStyle: SubtitleStyleSettings
+        get() = subtitleStyle.editableForVideo(isHdrVideo)
+}
 
 internal fun PlayerUiState.clearFrameRateDetection(): PlayerUiState = copy(
     detectedFrameRateRaw = 0f,
@@ -355,6 +368,7 @@ sealed class PlayerEvent {
 
     // Subtitle style events (for in-player style tab)
     data class OnSetSubtitleSize(val size: Int) : PlayerEvent()
+    data class OnSetSubtitleHdrBrightness(val brightness: Int) : PlayerEvent()
     data class OnSetSubtitleTextColor(val color: Int) : PlayerEvent()
     data class OnSetSubtitleBold(val bold: Boolean) : PlayerEvent()
     data class OnSetSubtitleOutlineEnabled(val enabled: Boolean) : PlayerEvent()

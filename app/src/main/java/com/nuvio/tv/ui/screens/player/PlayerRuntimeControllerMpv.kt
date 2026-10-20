@@ -34,7 +34,7 @@ internal fun PlayerRuntimeController.attachMpvView(view: NuvioMpvSurfaceView?) {
             preferred = _uiState.value.subtitleStyle.preferredLanguage,
             secondary = _uiState.value.subtitleStyle.secondaryPreferredLanguage
         )
-        view.applySubtitleStyle(_uiState.value.subtitleStyle)
+        view.applySubtitleStyle(_uiState.value.effectiveSubtitleStyle)
         view.setSubtitleDelayMs(_uiState.value.subtitleDelayMs)
         view.applyBluetoothAudioRoute(currentAudioOutputRoute?.isBluetooth == true)
         view.setAudioDelayMs(_uiState.value.audioDelayMs)
@@ -152,7 +152,7 @@ internal fun PlayerRuntimeController.initializeMpvPlayer(
             preferred = _uiState.value.subtitleStyle.preferredLanguage,
             secondary = _uiState.value.subtitleStyle.secondaryPreferredLanguage
         )
-        view.applySubtitleStyle(_uiState.value.subtitleStyle)
+        view.applySubtitleStyle(_uiState.value.effectiveSubtitleStyle)
         view.setSubtitleDelayMs(_uiState.value.subtitleDelayMs)
         view.applyBluetoothAudioRoute(currentAudioOutputRoute?.isBluetooth == true)
         view.setAudioDelayMs(_uiState.value.audioDelayMs)
@@ -306,6 +306,7 @@ internal fun PlayerRuntimeController.markMpvTracksStale() {
  * add-on subtitles arriving one add-on at a time.
  */
 internal fun PlayerRuntimeController.updateMpvTracksOnTick() {
+    updateMpvHdrVideoState()
     if (mpvTrackRefreshGate.isStale) {
         updateMpvAvailableTracks()
         return
@@ -319,6 +320,15 @@ internal fun PlayerRuntimeController.updateMpvTracksOnTick() {
         subtitleTracks = state.subtitleTracks
     )
     tryAutoSelectPreferredSubtitleFromAvailableTracks()
+}
+
+/** mpv only reports the video transfer once it has decoded video params, so this is re-read each tick. */
+private fun PlayerRuntimeController.updateMpvHdrVideoState() {
+    if (!isUsingMpvEngine()) return
+    val isHdrVideo = mpvView?.readVideoIsHdr() ?: return
+    if (_uiState.value.isHdrVideo != isHdrVideo) {
+        _uiState.update { it.copy(isHdrVideo = isHdrVideo) }
+    }
 }
 
 /** A file without embedded subtitles only counts as text-scanned once the first frame is up. */
