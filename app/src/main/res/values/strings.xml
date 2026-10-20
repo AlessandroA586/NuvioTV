@@ -413,6 +413,10 @@
     <string name="about_version">Version %1$s</string>
     <string name="about_update_banner_title">Automatic update banner</string>
     <string name="about_update_banner_subtitle">Show a banner when a new version is available</string>
+    <string name="about_update_auto_install_title">Install updates automatically</string>
+    <string name="about_update_auto_install_subtitle">Download new versions in the background and install them while the device is idle</string>
+    <string name="about_update_auto_install_notice_title">Notify after automatic updates</string>
+    <string name="about_update_auto_install_notice_subtitle">Show a banner on the next launch after the app updates itself</string>
     <string name="about_update_channel_title">Update channel</string>
     <string name="about_update_channel_subtitle">Choose the type of app updates to receive</string>
     <string name="about_check_updates">Check for updates</string>
@@ -2435,6 +2439,7 @@
     <string name="update_checking">Checking for updates…</string>
     <string name="update_waiting_for_stable">You’ll receive the next stable release when it becomes available</string>
     <string name="update_download_complete">Download complete. Ready to install.</string>
+    <string name="update_installed_automatically">Updated automatically while the device was idle</string>
     <string name="update_up_to_date">System is up to date. Latest changes:</string>
     <string name="update_close">Close</string>
     <string name="update_open_settings">Open Settings</string>

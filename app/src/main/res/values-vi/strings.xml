@@ -649,7 +649,7 @@
     <string name="settings_debrid_subtitle">Nguồn tài khoản đám mây thử nghiệm</string>
 
     <string name="playback_title">Cài đặt phát lại</string>
-    <string name="playback_subtitle">Cấu hình trình phát lại video và tuỳ chọn phụ đề</string>
+    <string name="playback_subtitle">Cấu hình phát lại video và tùy chọn phụ đề</string>
     <string name="cd_decrease">Giảm</string>
     <string name="cd_increase">Tăng</string>
     <string name="action_cancel">Huỷ</string>
@@ -905,6 +905,10 @@
     <string name="sub_outline">Viền chữ</string>
     <string name="sub_outline_sub">Thêm viền chữ quanh phụ đề để dễ đọc hơn</string>
     <string name="sub_outline_color">Màu viền</string>
+    <string name="sub_hdr_style">Kiểu riêng cho HDR / Dolby Vision</string>
+    <string name="sub_hdr_style_sub">Sử dụng một màu chữ khác và độ sáng thấp hơn cho phụ đề trên video HDR và Dolby Vision</string>
+    <string name="sub_hdr_text_color">Màu chữ HDR</string>
+    <string name="sub_hdr_brightness">Độ sáng phụ đề HDR</string>
     <string name="sub_advanced_section">Hiển thị phụ đề nâng cao</string>
     <string name="sub_libass">Dùng libass cho phụ đề ASS/SSA</string>
     <string name="sub_libass_sub">Thử nghiệm: kết xuất ASS/SSA nâng cao (kiểu chữ, định vị, hoạt ảnh)</string>
@@ -1968,6 +1972,9 @@
     <string name="subtitle_style_bold">In đậm</string>
     <string name="subtitle_style_text_color">Màu chữ</string>
     <string name="subtitle_style_text_opacity">Độ mờ chữ</string>
+    <string name="subtitle_style_text_color_hdr">Màu chữ (HDR)</string>
+    <string name="subtitle_style_text_opacity_hdr">Độ mờ chữ (HDR))</string>
+    <string name="subtitle_style_brightness_hdr">Độ sáng (HDR)</string>
     <string name="subtitle_style_outline">Viền chữ</string>
     <string name="subtitle_style_bottom_offset">Khoảng cách lề dưới</string>
     <string name="subtitle_style_defaults">Mặc định</string>
@@ -3240,7 +3247,7 @@
     <string name="playback_buffer_allow_large_sub">Gỡ bỏ giới hạn bộ nhớ thiết bị trên thanh trượt dung lượng bộ đệm mục tiêu, cho phép các giá trị lên đến 2 GB. Có thể gây lỗi trên thiết bị có dưới 2 GB RAM.</string>
     <string name="playback_cache_header">Bộ nhớ đệm đĩa</string>
     <string name="playback_cache_vod">Bộ nhớ đệm VOD trên đĩa</string>
-    <string name="playback_cache_vod_sub">Lưu các bytes đã tải xuống vào đĩa cho luồng phát hiện tại. Tính năng này giúp mở rộng khả năng tua ngược tức thì vượt ra ngoài giới hạn của bộ nhớ đệm ngược trên RAM và giúp duy trì phát video khi mạng bị ngắt kết nối trong thời gian ngắn. Chỉ áp dụng cho các luồng phát lũy tiến (không áp dụng cho HLS/DASH).</string>
+    <string name="playback_cache_vod_sub">Lưu các bytes đã tải xuống vào đĩa cho luồng phát hiện tại. Tính năng này giúp mở rộng khả năng tua ngược tức thì vượt ra ngoài giới hạn của bộ nhớ đệm ngược trên RAM và giúp duy trì phát video khi mạng bị ngắt kết nối trong thời gian ngắn. Chỉ áp dụng cho các luồng lũy tiến (không áp dụng cho HLS/DASH).</string>
     <string name="playback_cache_auto_size">Dung lượng tự động</string>
     <string name="playback_cache_auto_size_sub">Khi bật, dung lượng bộ nhớ đệm được tính dựa trên dung lượng đĩa trống. Tắt tùy chọn này để tự chọn dung lượng.</string>
     <string name="playback_cache_vod_size">Dung lượng bộ nhớ đệm VOD</string>
@@ -3253,7 +3260,7 @@
     <string name="playback_cache_write_warning">Trên các thiết bị có bộ nhớ tích hợp sẵn, hoạt động ghi diễn ra liên tục và có thể làm hao mòn bộ nhớ theo thời gian.</string>
     <string name="playback_reset_to_default">Đặt lại</string>
     <string name="playback_net_custom">Mạng tùy chỉnh</string>
-    <string name="playback_net_custom_sub">Sử dụng nhiều kết nối đồng thời để tải các luồng tiến dần. Khi tắt, chỉ sử dụng một kết nối.</string>
+    <string name="playback_net_custom_sub">Sử dụng nhiều kết nối đồng thời để tải các luồng lũy tiến. Khi tắt, chỉ sử dụng một kết nối.</string>
     <string name="playback_net_parallel">Kết nối đồng thời</string>
     <string name="playback_net_parallel_sub">Sử dụng nhiều kết nối đồng thời để tải luồng phát. Bật tùy chọn này khi bạn vẫn gặp tình trạng đệm dù tốc độ tải xuống chắc chắn đủ nhanh.</string>
     <string name="playback_net_connection_count">Số lượng kết nối</string>
