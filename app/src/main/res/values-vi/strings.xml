@@ -808,6 +808,9 @@
     <string name="video_section">Video</string>
     <string name="playback_true_black_letterbox">Viền đen tuyệt đối</string>
     <string name="playback_true_black_letterbox_sub">Không phủ màu các viền đen xung quanh hình ảnh để hiển thị HDR đen tuyệt đối. Vui lòng tắt tính năng này nếu xuất hiện vệt sáng trên các viền đen.</string>
+    <string name="playback_chapters_label">Chương</string>
+    <string name="playback_exo_chapters_title">Hiển thị chương (ExoPlayer)</string>
+    <string name="playback_exo_chapters_sub">Đọc các chương của tệp MKV để đánh dấu trên thanh tiến trình và chuyển đổi qua lại giữa chúng. Thực hiện thêm một vài yêu cầu nhỏ khi bắt đầu phát lại. mpv luôn hiển thị các chương.</string>
     <string name="audio_trailer_section">Trailer</string>
     <string name="audio_autoplay_trailers">Tự động phát trailer</string>
     <string name="audio_autoplay_trailers_sub">Tự động phát trailer trên màn hình chi tiết sau một khoảng thời gian không hoạt động</string>
@@ -2535,6 +2538,10 @@
     <string name="cd_sources">Nguồn</string>
     <string name="cd_switch_player_engine">Chuyển lõi trình phát</string>
     <string name="cd_episodes">Tập phim</string>
+    <string name="player_chapter_number">Chương %1$d</string>
+    <string name="player_chapters">Chương</string>
+    <string name="player_chapters_title">Chương (%1$d)</string>
+    <string name="player_chapter_remaining">Còn lại %1$s</string>
     <string name="cd_playback_speed">Tốc độ phát lại</string>
     <string name="cd_aspect_ratio">Tỷ lệ khung hình</string>
     <string name="cd_open_external_player">Mở bằng trình phát ngoài</string>
@@ -3398,4 +3405,6 @@
     <string name="autosync_toast_failed_no_reference">Đồng bộ thất bại: video này không có phụ đề nhúng sẵn để so sánh.</string>
     <string name="autosync_toast_failed_unsupported">Đồng bộ thất bại: Tự động đồng bộ không hỗ trợ đồng bộ định dạng phụ đề này.</string>
     <string name="autosync_label_synced">Đã tự động đồng bộ</string>
+    <string name="stream_resume_from_time">Xem tiếp từ %1$s</string>
+    <string name="stream_resume_from_percent">Xem tiếp từ %1$d%%</string>
 </resources>

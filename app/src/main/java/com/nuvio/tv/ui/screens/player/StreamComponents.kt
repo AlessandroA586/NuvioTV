@@ -374,7 +374,7 @@ internal fun AddonFilterChips(
 
     LaunchedEffect(focusedChipIndex) {
         if (focusedChipIndex >= 0 && !chipRowHasFocus) {
-            chipListState.animateScrollToItem(focusedChipIndex)
+            chipListState.scrollToItem(0)
         }
     }
 
