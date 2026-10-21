@@ -613,6 +613,9 @@ class PlayerRuntimeController(
     internal var mpvMediaLoadPrepared: Boolean = false
     internal var mpvTrackRefreshJob: Job? = null
     internal var mpvTrackRefreshInProgress: Boolean = false
+    /** The stream whose chapters [PlayerUiState.chapters] holds. */
+    internal var mpvChaptersStreamUrl: String? = null
+    internal var exoChapterLoadJob: Job? = null
     internal val mpvTrackRefreshGate = MpvTrackRefreshGate()
     internal var pendingMpvHardRestartOnNextAttach: Boolean = false
     internal var mpvEventRelay: MpvEventRelay? = null
