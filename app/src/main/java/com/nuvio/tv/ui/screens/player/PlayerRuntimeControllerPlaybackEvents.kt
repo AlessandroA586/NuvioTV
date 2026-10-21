@@ -251,6 +251,7 @@ internal fun PlayerRuntimeController.startProgressUpdates() {
                         durationMs = playerDuration
                     )
                     val playingNow = view.isPlayingNow()
+                    subtitleCueTracker.updateText(view.currentSubtitleText())
                     val cacheBuffering = view.isPausedForCacheNow() || view.isCoreIdleNow()
                     var firstFrameReady = hasRenderedFirstFrame
                         if (!firstFrameReady) {
